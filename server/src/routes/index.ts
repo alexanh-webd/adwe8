@@ -14,6 +14,7 @@ import upload from "../middleware/multer-config.js";
 import path from "path";
 import fs from "fs/promises";
 import mongoose from "mongoose";
+import PDFDocument from "pdfkit";
 
 import {validateToken} from '../middleware/validateToken.js'
 import type { CustomRequest } from '../middleware/validateToken.js';
@@ -221,7 +222,7 @@ router.post("/api/file/:id/edit/start", validateToken, async (req: CustomRequest
         }
 
         const userId = req.user.id; // Comes from the validated token
-
+        
         const canEdit =
             file.owner.toString() === userId ||
             file.editor.map(id => id.toString()).includes(userId);
@@ -231,8 +232,12 @@ router.post("/api/file/:id/edit/start", validateToken, async (req: CustomRequest
         }
 
         if (!file.editingSessions.fileLocked) {
+            const savedAt = req.body.savedAt;
             file.editingSessions.userId = new mongoose.Types.ObjectId(userId);
+            file.savedAt = savedAt;
             const fileContent = req.body.content;
+            
+            
             await fs.writeFile(path.join(process.cwd(), "public", file.path), fileContent);
             //file.editingSessions.fileLocked = true;
             await file.save();
@@ -400,6 +405,72 @@ router.get("/api/file/nonAuthenticate", async (req: Request, res: Response) => {
         return res.status(200).json({file: allFile});
     } catch(error: any) {
         return res.status(500).json({message: "Internal server error"});
+    }
+})
+
+router.get("/api/file/:id/downloadPDF", async (req: Request, res: Response)=> {
+    try {
+        const file = await TextFile.findById(req.params.id);
+        if (!file) {
+            return res.status(400).json({message: "No such file"});
+        }
+        const filePath = path.join(process.cwd(), "public", file.path);
+        const fileContent = await fs.readFile(filePath, "utf-8");
+        
+
+        //create PDF
+        const pdfDoc = new PDFDocument({size: "A4", margin: 50});
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${file.filename.replace(/\s+/g, "_")}.pdf"`
+        );
+
+        pdfDoc.pipe(res);
+
+        // Add the text content
+        pdfDoc.font("Times-Roman").fontSize(12).text(fileContent, { lineGap: 4 });
+
+        pdfDoc.end();
+    } catch(error: any) {
+        return res.status(500).json({message: "Internal server error"});
+    }
+});
+
+router.post("/api/file/:id/comment", validateToken, async (req: CustomRequest, res: Response) => {
+    try {
+        if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+        const line: number = req.body.line;
+        const comment: string = req.body.comment;
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({message: "No such user"})
+        }
+        const file = await TextFile.findById(req.params.id);
+        if (!file) return res.status(400).json({message: "No such file"});
+        file.comments.push({
+            line: line,
+            author: new mongoose.Types.ObjectId(req.user.id),
+            authorName: user.username,
+            comment: comment,
+            createdAt: new Date()
+        })
+        await file.save();
+        return res.status(200).json({message: "Comment added successfully"});
+    } catch (error) {
+        return res.status(500).json({message: "Internal server error"})
+    }
+})
+
+router.get("/api/file/:id/getComment", validateToken, async (req: CustomRequest, res: Response) => {
+    try {
+        if (!req.user) return res.status(401).json({message: "Unauthorized"});
+        const file = await TextFile.findById(req.params.id);
+        if (!file) return res.status(404).json({message: "No such file"});
+        return res.status(200).json({ comment: file.comments})
+    } catch (error: any) {
+        return res.status(500).json({message: "Internal server error"})
     }
 })
 

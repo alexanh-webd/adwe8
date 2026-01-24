@@ -5,10 +5,18 @@ interface ITextFile extends Document {
     uploadedAt: Date;
     owner: Types.ObjectId;
     editor: Types.ObjectId[];
+    savedAt: Date;
     editingSessions: {
         userId: Types.ObjectId | null;
         fileLocked: boolean;
     };
+    comments: {
+        line: number;
+        author: Types.ObjectId;
+        authorName: string;
+        comment: string;
+        createdAt: Date;
+    }[];
     readOnly: boolean;
 }
 declare const TextFile: mongoose.Model<ITextFile, {}, {}, {}, mongoose.Document<unknown, {}, ITextFile, {}, mongoose.DefaultSchemaOptions> & ITextFile & Required<{

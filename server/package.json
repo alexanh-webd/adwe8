@@ -20,7 +20,8 @@
     "mongoose": "^9.1.1",
     "morgan": "^1.10.1",
     "nodemon": "^3.1.11",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "pdfkit": "^0.17.2"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -28,6 +29,7 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
+    "@types/pdfkit": "^0.17.4",
     "tsc-watch": "^7.2.0"
   }
 }

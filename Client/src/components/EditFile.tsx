@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Box, Button, Card, CardContent, TextField, Typography } from "@mui/material";
+import {useTranslation} from 'react-i18next';
+interface IComment {
+    line: number;
+    author: string;
+    comment: string;
+    createdAt: string;
+}
 
 const EditFile = () => {
+    const {t, i18n} = useTranslation();
     const { fileId } = useParams<{ fileId: string }>(); // only call once
     const [jwt, setJwt] = useState<string | null>(null);
     const [content, setContent] = useState("");
@@ -10,6 +18,9 @@ const EditFile = () => {
     const [loading, setLoading] = useState(true);
     const [permitId, setPermitId] = useState<string>("");
     const [rename, setRename] = useState<string>("");
+    const [comment, setComment] = useState<IComment[]>([]);
+    const [line, setLine] = useState<Number>(0);
+    const [inComment, setInComment] = useState<String>("");
     // Set JWT once on mount
     useEffect(() => {
         const token = localStorage.getItem("userToken");
@@ -36,9 +47,38 @@ const EditFile = () => {
                 setLoading(false);
             }
         };
+        const fetchComment = async() => {
+            if (!jwt || !fileId) return;
+            try {
+                setLoading(true);
+                const response = await fetch(`http://localhost:4000/api/file/${fileId}/getComment`, {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${jwt}`,
+                    },
+                });
+                const data = await response.json();
+                //setComment([...comment, data.comments]);
+                //console.log(data.comment[0])
+                //let i: number = 0;
+                //for (i = 0; i < data.comment.length; i++) {
+                //    console.log(data.comment[0])
+                //}
+                
+                setComment(data.comment)
+            } catch (error: any) {
+                console.log("Error fetching comment:", error.message);
+            } finally {
+                setLoading(false);
+            }
+        };
 
         fetchFileContent();
+        fetchComment();
     }, [jwt, fileId]);
+    useEffect(() => {
+        console.log("Updated comments:", comment);
+    }, [comment]);
 
     const saveButton = async () => {
         if (!jwt || !fileId) return;
@@ -50,7 +90,10 @@ const EditFile = () => {
                     "Authorization": `Bearer ${jwt}`,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ content }),
+                body: JSON.stringify({ 
+                    content: content,
+                    savedAt: Date.now()
+                 }),
             });
             const data = await response.json();
             console.log("Saved:", data);
@@ -140,7 +183,43 @@ const EditFile = () => {
         } catch(error: any) {
             console.log("Error when giving view permission to all user!!!")
         }
-    } 
+    }
+
+    const downLoadPdfBtn = async() => {
+        try {
+            const dowloadPdf = await fetch(`http://localhost:4000/api/file/${fileId}/downloadPDF`);
+            // Download from ChatGPT
+            const blob = await dowloadPdf.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "myfile.pdf";
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch(error: any) {
+            console.log("Error when download file as PDF")
+        }
+    }
+
+    const commentBtn = async() => {
+        const uploadComment = await fetch(`http://localhost:4000/api/file/${fileId}/comment`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${jwt}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                line: line,
+                comment: inComment
+            })
+        });
+        const upLoadCommentJson = await uploadComment.json();
+        console.log(upLoadCommentJson);
+    }
+    const changeLanguage = (lng: string) => {
+        i18n.changeLanguage(lng)
+    }
+
 
     return (
         <div>
@@ -159,22 +238,41 @@ const EditFile = () => {
             <TextField
                 required
                 id="outlined-required"
-                label="Permit User ID"
+                label={t("Permit User ID")}
                 type = "text"
                 defaultValue=""
                 onChange={(e) => setPermitId(e.target.value)}
                 />
-                <Button sx={{ display: 'flex', justifyContent: 'center', marginLeft: 2 }} variant="contained" color="primary" onClick={() => permissionButton()}>Give permit</Button>
+                <Button sx={{ display: 'flex', justifyContent: 'center', marginLeft: 2 }} variant="contained" color="primary" onClick={() => permissionButton()}>{t("Give permit")}</Button>
             <TextField
                 required
                 id="outlined-required"
-                label="Rename the file"
+                label={t("Rename the file")}
                 type = "text"
                 defaultValue=""
                 onChange={(e) => setRename(e.target.value)}
                 />
-            <Button sx={{ display: 'flex', justifyContent: 'center', marginLeft: 2 }} variant="contained" color="primary" onClick={() => renameButton()}>Rename</Button>
+            <Button sx={{ display: 'flex', justifyContent: 'center', marginLeft: 2 }} variant="contained" color="primary" onClick={() => renameButton()}>{t("Rename")}</Button>
+            <TextField
+                required
+                id="outlined-required"
+                label={t("Comment line")}
+                type = "number"
+                defaultValue=""
+                onChange={(e) => setLine(Number(e.target.value))}
+                />
+            <TextField
+                required
+                id="outlined-required"
+                label={t("Give comment")}
+                type = "text"
+                defaultValue=""
+                onChange={(e) => setInComment(e.target.value)}
+                />
             
+            <Button sx={{ display: 'flex', justifyContent: 'center', marginLeft: 2 }} variant="contained" color="primary" onClick={() => commentBtn()}>{t("Comment")}</Button>
+            <Button onClick={() => changeLanguage("fi")}>FI</Button>
+            <Button onClick={() => changeLanguage("en")}>EN</Button>
             </Box>
         <Box
             sx={{
@@ -197,11 +295,11 @@ const EditFile = () => {
             >
                 <CardContent sx={{ p: 6 }}>
                     <Typography variant="h4" sx={{ mb: 4, fontWeight: 500 }}>
-                        Edit File
+                        {t("Edit File")}
                     </Typography>
 
                     {loading ? (
-                        <Typography>Loading...</Typography>
+                        <Typography>{t("Loading...")}</Typography>
                     ) : (
                         <TextField
                             multiline
@@ -229,26 +327,66 @@ const EditFile = () => {
                             disabled={saving}
                             onClick={saveButton}
                         >
-                            {saving ? "Saving..." : "Save"}
+                            {saving ? t("Saving...") : t("Save")}
                         </Button>
                         <Button
                             variant="contained"
                             size="large"
                             onClick={() => lockButton()}
-                        > lock
+                        > {t("lock")}
                         </Button>
                         <Button
                             variant="contained"
                             size="large"
                             onClick={() => unLockButton()}
-                        > Unlock
+                        > {t("Unlock")}
                         </Button>
                         <Button
                             variant="contained"
                             size="large"
                             onClick={() => viewToAllBtn()}
-                        > View to all
+                        > {t("View to all")}
                         </Button>
+                        <Button
+                            variant="contained"
+                            size="large"
+                            onClick={() => downLoadPdfBtn()}
+                        > {t("Download PDF")}
+                        </Button>
+                    </Box>
+                    <Box sx={{ mt: 4 }}>
+                        <Typography variant="h6">{t("Comments")}</Typography>
+
+                        {comment.length === 0 ? (
+                            <Typography variant="body2" color="text.secondary">
+                                {t("No comments yet")}
+                            </Typography>
+                        ) : (
+                            comment.map((c, index) => (
+                                <Box
+                                    key={index}
+                                    sx={{
+                                        mt: 2,
+                                        p: 2,
+                                        border: "1px solid #ddd",
+                                        borderRadius: 1,
+                                        backgroundColor: "#fafafa",
+                                    }}
+                                >
+                                    <Typography variant="subtitle2">
+                                        Line {c.line}
+                                    </Typography>
+
+                                    <Typography variant="body1">
+                                        {c.comment}
+                                    </Typography>
+
+                                    <Typography variant="caption" color="text.secondary">
+                                        {new Date(c.createdAt).toLocaleString()}
+                                    </Typography>
+                                </Box>
+                            ))
+                        )}
                     </Box>
                 </CardContent>
             </Card>
