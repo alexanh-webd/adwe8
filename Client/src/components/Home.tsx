@@ -2,7 +2,27 @@ import { useEffect, useState } from "react";
 import Button from '@mui/material/Button';
 import { Box, Card, CardActions, CardContent, TextField, Typography } from '@mui/material';
 import {useTranslation} from 'react-i18next';
-import { changeLanguage } from "i18next";
+import toast, { Toaster } from 'react-hot-toast';
+
+import Drawer from '@mui/material/Drawer';
+import CssBaseline from '@mui/material/CssBaseline';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import Divider from '@mui/material/Divider';
+import Accordion from '@mui/material/Accordion';
+import AccordionActions from '@mui/material/AccordionActions';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
+import DriveFolderUploadOutlinedIcon from '@mui/icons-material/DriveFolderUploadOutlined';
+import SendOutlinedIcon from '@mui/icons-material/SendOutlined';
+import ContentPasteSearchOutlinedIcon from '@mui/icons-material/ContentPasteSearchOutlined';
+
+const drawerWidth = 287;
+
 interface ITopic {
     title: string;
     content: string;
@@ -44,12 +64,17 @@ const Home = () => {
         if(localStorage.getItem("userToken")) {
             setJwt(localStorage.getItem("userToken"));
         }
-    }, [jwt]);
+    }, []);
 
+    useEffect(() => {
+        if (!jwt) return
+        fetchFileCorrespondingToUser();
+    }, [jwt])
+    
     const postFile = async () => {
         try {
             if (!fileNameIn) {
-                console.log("No file selected");
+                toast("No file selected");
                 return;
             } else {
                 const formData = new FormData();
@@ -63,7 +88,8 @@ const Home = () => {
                 });
                 const data = await res.json();
                 if (res.status === 201) {
-                    console.log("File uploaded successfully");
+                    toast("File uploaded successfully");
+                    fetchFileCorrespondingToUser();
                     console.log(data);
                     setUserId(data.owner);
                 }
@@ -157,38 +183,126 @@ const Home = () => {
 
     return (
         <>
+        <Toaster  
+            toastOptions={{
+            className: 'Toast-dis',
+            style: {
+            border: '2px',
+            padding: '20px',
+            width: '180px',
+            color: '#ffffff',
+            backgroundColor: '#fc84e2'
+            },
+        }} />
          {/* Top-left fixed logout button */}
-        <Box
-            sx={{
-            position: "fixed", // stay fixed on screen
-            top: 16,           // distance from top
-            right: 16,          // distance from left
-            zIndex: 1000       // make sure it's above other elements
-            }}
-        >
-            <Button
-            variant="contained"
-            color="primary"
-            onClick={() => {
-                localStorage.removeItem("userToken"); // clear JWT
-                window.location.href = "/login";       // redirect to login page
-            }}
-            >
-            {t("log in")}
-            </Button>
-            <Button
-            variant="contained"
-            color="primary"
-            onClick={() => {
-                localStorage.removeItem("userToken"); // clear JWT
-                window.location.href = "/";       // redirect to login page
-            }}
-            >
-            {t("log out")}
-            </Button>
-            <Button onClick={() => changeLanguage("fi")}>FI</Button>
-            <Button onClick={() => changeLanguage("en")}>EN</Button>
-        </Box>
+            <Box sx={{ display: 'flex' }}>
+                <CssBaseline />
+                <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                    <Toolbar>
+                    <Typography variant="h6" noWrap component="div">
+                        OneDrive
+                    </Typography>
+                    </Toolbar>
+                </AppBar>
+                <Drawer
+                    variant="permanent"
+                    sx={{
+                    width: drawerWidth,
+                    flexShrink: 0,
+                    [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
+                    }}
+                >
+                    <Toolbar />
+                    <Box sx={{ overflow: 'auto' }}>
+                    <List>
+                         <ListItem key={"searchFile"} disablePadding >
+                                <SearchOutlinedIcon />
+                                <Accordion defaultExpanded>
+                                    <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon />}
+                                    aria-controls="panel3-content"
+                                    id="panel3-header"
+                                    >
+                                    <Typography component="span">{t("Search")}</Typography>
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                        {t("Search by title")}
+                                    <Box paddingTop={2}>
+                                    <TextField
+                                        required
+                                        id="outlined-required"
+                                        label={t("Title")}
+                                        type = "text"
+                                        defaultValue=""
+                                        onChange={(e) => setTitle(e.target.value)}
+                                    />
+                                    </Box>
+                                    </AccordionDetails>
+                                    <AccordionActions>
+                                        <Button endIcon={<ContentPasteSearchOutlinedIcon/>} sx={{ display: 'flex', justifyContent: 'center', marginLeft: 2 }} variant="outlined" color="secondary" >{t("Search File")}</Button>
+                                    </AccordionActions>
+                                </Accordion>
+                        </ListItem>
+                        <ListItem key={"uploadFile"} disablePadding>
+                            <DriveFolderUploadOutlinedIcon/>
+                            <Accordion defaultExpanded>
+                            <AccordionSummary
+                                expandIcon={<ExpandMoreIcon />}
+                                aria-controls="panel3-content"
+                                id="panel3-header"
+                                >
+                                <Typography component="span">{t("Upload")}</Typography>
+                            </AccordionSummary>
+                                <AccordionDetails>
+                                {t("Upload file to your drive")}
+                                <Box paddingTop={2}>
+                                    <input 
+                                    type="file"
+                                    accept=".txt" 
+                                    placeholder="Upload a text file" 
+                                    style={
+                                        {
+                                            width: '100%',
+                                            height: '56px', // same as MUI TextField default height
+                                            padding: '16.5px 14px', // match MUI TextField padding
+                                            border: '1px solid rgba(0, 0, 0, 0.23)',
+                                            borderRadius: 4,
+                                            boxSizing: 'border-box'
+                                        }
+                                    }
+                                    onChange={(e) => setFileNameIn(e.target.files?.[0] ?? null)}
+                                    />
+                                </Box>
+                            </AccordionDetails>
+                            <AccordionActions>
+                                <Button endIcon={<SendOutlinedIcon/>} onClick={postFile}>{t("Upload")}</Button>
+                            </AccordionActions>
+                            </Accordion>
+                        </ListItem>
+                    </List>
+                    <Divider />
+                    <List>
+                        <ListItem key={"logOut"}>
+                            <Button
+                                variant="outlined"
+                                color="warning"
+                                fullWidth
+                                onClick={() => {
+                                    localStorage.removeItem("userToken"); // clear JWT
+                                    window.location.href = "/";       // redirect to login page
+                                }}
+                                >
+                                {t("log out")}
+                            </Button>
+                        </ListItem>
+                    </List>
+                    
+                    <Button onClick={() => changeLanguage("fi")}>FI</Button>
+                    <Button onClick={() => changeLanguage("en")}>EN</Button>
+                    <p>User id: {userId || "Loading..."}</p>
+            </Box>
+      </Drawer>
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <div>
         <h2>{t("Home")}</h2>
         {!jwt ? (
@@ -224,24 +338,6 @@ const Home = () => {
                         noValidate
                         autoComplete="off"
                     >
-                        <TextField
-                            required
-                            id="outlined-required"
-                            label={t("Title")}
-                            type = "text"
-                            defaultValue=""
-                            onChange={(e) => setTitle(e.target.value)}
-                        />
-                        <TextField
-                            required
-                            id="outlined-password-input"
-                            label={t("Content")}
-                            type="text"
-                            autoComplete="current-password"
-                            onChange={(e) => setContent(e.target.value)}
-                        />
-                        <Button sx={{ display: 'flex', justifyContent: 'center', marginLeft: 2 }} variant="contained" color="primary" >{t("Search File")}</Button>
-
                         <ul>
                             {topics.map((topic, index) => (
                                 <li key={index}>
@@ -254,8 +350,6 @@ const Home = () => {
                     </Box>
 
                     <Box>
-                    <input type="file" accept=".txt" placeholder="Upload a text file" onChange={(e) => setFileNameIn(e.target.files?.[0] ?? null)}/>
-                    <Button onClick={postFile}>{t("Upload File To Server")}</Button>
                     <Button onClick={fetchFileCorrespondingToUser}>{t("Get files")}</Button>
                     </Box>
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mt: 2 }}>
@@ -287,11 +381,14 @@ const Home = () => {
                         ))}
                         
                         </Box>
-                        <button onClick={() => showMoreBtn()}>{t("Show more")}</button>
-                        
+                        <Box paddingTop={2}>
+                            <button onClick={() => showMoreBtn()}>{t("Show more")}</button>
+                        </Box>    
                 </>
             )}
        </div> 
+      </Box>
+    </Box>
     </>
 
     );

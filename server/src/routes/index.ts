@@ -77,7 +77,7 @@ router.post("/api/user/login",
                     username: user.username,
                     isAdmin: user.isAdmin
                 }
-                const token: string = jwt.sign(jwtPayload, process.env.SECRET as string, { expiresIn: "2m" })
+                const token: string = jwt.sign(jwtPayload, process.env.SECRET as string, { expiresIn: "120m" })
                 return res.status(200).json({token: token});
             } else {
                 return res.status(401).json({message: "login failed"});

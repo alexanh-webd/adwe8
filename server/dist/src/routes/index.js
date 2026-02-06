@@ -62,7 +62,7 @@ router.post("/api/user/login", body('email').escape(), body('password'), async (
                 username: user.username,
                 isAdmin: user.isAdmin
             };
-            const token = jwt.sign(jwtPayload, process.env.SECRET, { expiresIn: "2m" });
+            const token = jwt.sign(jwtPayload, process.env.SECRET, { expiresIn: "120m" });
             return res.status(200).json({ token: token });
         }
         else {

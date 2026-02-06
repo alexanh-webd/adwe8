@@ -229,16 +229,15 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
                         color={passwordError ? 'error' : 'primary'}
                     />
                     </FormControl>
+
                     <FormControlLabel
-                    control={<Checkbox color="primary" />}
+                    control={<Checkbox color="primary" name='isAdmin' />}
                     label= "Do u want to register as admin?"
-                    htmlFor='isAdmin'
                     />
                     <Button
                     type="submit"
                     fullWidth
                     variant="contained"
-                    onClick={validateInputs}
                     >
                     Sign up
                     </Button>

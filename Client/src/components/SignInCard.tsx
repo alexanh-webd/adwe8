@@ -13,7 +13,8 @@ import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 import ForgotPassword from './ForgotPassword';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from './CustomIcons';
-import { useState } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
+import {useTranslation} from 'react-i18next';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -47,23 +48,24 @@ const fetchData = async (email: string, password: string) => {
           })
           const data = await response.json();
           if (response.status === 200) {
-              console.log(data.token);
+              toast(data.token);
               localStorage.setItem("userToken", data.token);
               //await onLoadResponse;
-              window.location.href = "/";
+              window.location.href = "/home";
           } else if (response.status === 401) {
-              console.log("LOGIN FAILED");
+              toast("LOGIN FAILED");
           }
           //console.log("Resgistration successfully: ", data);
           //window.location.href = "/";
       } catch(error) {
           if (error instanceof Error) {
-              console.log("Error when trying to register: " + error.message);
+              toast("Error when trying to register: " + error.message);
         }
     }
 }
 
 export default function SignInCard() {
+  const {t, i18n} = useTranslation();
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
@@ -119,6 +121,17 @@ export default function SignInCard() {
 
   return (
     <Card variant="outlined">
+      <Toaster  
+                      toastOptions={{
+                          className: 'Toast-dis',
+                          style: {
+                          border: '2px',
+                          padding: '20px',
+                          width: '180px',
+                          color: '#ffffff',
+                          backgroundColor: '#fc84e2'
+                          },
+                      }} />
       <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
         <SitemarkIcon />
       </Box>
@@ -187,18 +200,18 @@ export default function SignInCard() {
         />
         <ForgotPassword open={open} handleClose={handleClose} />
         <Button type="submit" fullWidth variant="contained">
-          Sign in
+          {t("Sign in")}
         </Button>
 
         <Typography sx={{ textAlign: 'center' }}>
           Don&apos;t have an account?{' '}
           <span>
             <Link
-              href="/material-ui/getting-started/templates/sign-in/"
+              href="/signup"
               variant="body2"
               sx={{ alignSelf: 'center' }}
             >
-              Sign up
+              {t("Sign up")}
             </Link>
           </span>
         </Typography>

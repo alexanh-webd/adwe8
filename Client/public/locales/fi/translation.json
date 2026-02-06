@@ -32,5 +32,15 @@
     "View to all": "Katso kaikille",
     "Download PDF": "Lataa PDF",
     "Comments": "Kommentit",
-    "No comments yet": "Ei vielä kommentteja"
+    "No comments yet": "Ei vielä kommentteja",
+    "Upload file to your drive": "Lataa tiedosto asemallesi",
+    "Search by title": "Hae otsikon perusteella",
+    "Search": "Hae",
+    "Upload": "Lataa",
+    "Go home": "Koti",
+    "Give comment to improve the file content": "Anna kommentteja tiedoston sisällön parantamiseksi",
+    "Only the owner can rename the file": "Vain omistaja voi nimetä tiedoston uudelleen",
+    "Edit Permit": "Muokkaa lupaa",
+    "Give permit to your friends to edit the file": "Anna ystävillesi lupa muokata tiedostoa",
+    "Change language": "Vaihda kieli"
 }

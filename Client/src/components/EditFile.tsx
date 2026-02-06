@@ -1,7 +1,27 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Box, Button, Card, CardContent, TextField, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, TextField, Typography, Stack, Paper } from "@mui/material";
 import {useTranslation} from 'react-i18next';
+import toast, { Toaster } from 'react-hot-toast';
+
+import Drawer from '@mui/material/Drawer';
+import AppBar from '@mui/material/AppBar';
+import CssBaseline from '@mui/material/CssBaseline';
+import Toolbar from '@mui/material/Toolbar';
+import List from '@mui/material/List';
+import Divider from '@mui/material/Divider';
+import ListItem from '@mui/material/ListItem';
+import Accordion from '@mui/material/Accordion';
+import AccordionActions from '@mui/material/AccordionActions';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import DownloadDoneOutlinedIcon from '@mui/icons-material/DownloadDoneOutlined';
+import DriveFileRenameOutlineOutlinedIcon from '@mui/icons-material/DriveFileRenameOutlineOutlined';
+import MarkUnreadChatAltOutlinedIcon from '@mui/icons-material/MarkUnreadChatAltOutlined';
+
+const drawerWidth = 360;
+
 interface IComment {
     line: number;
     author: string;
@@ -28,6 +48,25 @@ const EditFile = () => {
     }, []);
 
     // Fetch file content when JWT or fileId changes
+    const fetchComment = async() => {
+            if (!jwt || !fileId) return;
+            try {
+                setLoading(true);
+                const response = await fetch(`http://localhost:4000/api/file/${fileId}/getComment`, {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${jwt}`,
+                    },
+                });
+                const data = await response.json();
+                setComment(data.comment)
+                
+            } catch (error: any) {
+                console.log("Error fetching comment:", error.message);
+            } finally {
+                setLoading(false);
+            }
+    };
     useEffect(() => {
         const fetchFileContent = async () => {
             if (!jwt || !fileId) return;
@@ -47,32 +86,6 @@ const EditFile = () => {
                 setLoading(false);
             }
         };
-        const fetchComment = async() => {
-            if (!jwt || !fileId) return;
-            try {
-                setLoading(true);
-                const response = await fetch(`http://localhost:4000/api/file/${fileId}/getComment`, {
-                    method: "GET",
-                    headers: {
-                        "Authorization": `Bearer ${jwt}`,
-                    },
-                });
-                const data = await response.json();
-                //setComment([...comment, data.comments]);
-                //console.log(data.comment[0])
-                //let i: number = 0;
-                //for (i = 0; i < data.comment.length; i++) {
-                //    console.log(data.comment[0])
-                //}
-                
-                setComment(data.comment)
-            } catch (error: any) {
-                console.log("Error fetching comment:", error.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchFileContent();
         fetchComment();
     }, [jwt, fileId]);
@@ -96,9 +109,15 @@ const EditFile = () => {
                  }),
             });
             const data = await response.json();
-            console.log("Saved:", data);
+            toast("Saved: "+ JSON.stringify(data)), {
+                style: {
+                    border: "1px solid black",
+                    color: '#dd9477'
+                }
+            };
+            
         } catch (error: any) {
-            console.log("Error saving file:", error.message);
+            toast("Error saving file:", error.message);
         } finally {
             setSaving(false);
         }
@@ -113,7 +132,8 @@ const EditFile = () => {
                 }
             });
             const lockData = await lockResponse.json();
-            console.log("File locked:", lockData);
+            console.log(lockData);
+            toast("File locked!");
         } catch (error: any) {
             console.error("Error locking file:", error.message);
         }
@@ -128,7 +148,8 @@ const EditFile = () => {
                 }
             });
             const lockData = await lockResponse.json();
-            console.log("File unlocked:", lockData);
+            console.log(lockData);
+            toast("File unlocked!");
         } catch (error: any) {
             console.error("Error unlocking file:", error.message);
         }
@@ -145,7 +166,7 @@ const EditFile = () => {
                 body: JSON.stringify({ editorId: permitId }),
             });
             const permissionData = await permissionResponse.json();
-            console.log("Permission granted:", permissionData);
+            toast("Permission granted:", permissionData);
         }catch (error: any) {
             console.error("Error giving permission:", error.message);
         }
@@ -162,7 +183,7 @@ const EditFile = () => {
                 body: JSON.stringify({newFilename: rename})
             });
             const renameData = await renameFetching.json();
-            console.log(renameData)
+            toast(JSON.stringify(renameData.message))
         } catch (error: any) {
             console.error("Error rename the file " + error.message);
         }
@@ -177,11 +198,11 @@ const EditFile = () => {
                 }
             })
             if (!giveViewFetching.ok) {
-                console.log("Error when fetching data");
+                toast("Error when fetching data");
             }
-            console.log("Set view = true successfully");
+            toast("Set view = true successfully");
         } catch(error: any) {
-            console.log("Error when giving view permission to all user!!!")
+            toast("Error when giving view permission to all user!!!")
         }
     }
 
@@ -215,183 +236,311 @@ const EditFile = () => {
         });
         const upLoadCommentJson = await uploadComment.json();
         console.log(upLoadCommentJson);
+        fetchComment();
     }
     const changeLanguage = (lng: string) => {
         i18n.changeLanguage(lng)
     }
-
+    const homeBtn = () => {
+        window.location.href = `/home`;
+    }
 
     return (
-        <div>
             <Box
-            component="form"
-            sx={{
-                alignItems: 'left',
-                display: 'flex',
-                flexDirection: 'row',
-                marginLeft: 18,
-                '& .MuiTextField-root': { m: 1, width: '25ch' },
-                }}
-                noValidate
-                autoComplete="off"
-        >
-            <TextField
-                required
-                id="outlined-required"
-                label={t("Permit User ID")}
-                type = "text"
-                defaultValue=""
-                onChange={(e) => setPermitId(e.target.value)}
-                />
-                <Button sx={{ display: 'flex', justifyContent: 'center', marginLeft: 2 }} variant="contained" color="primary" onClick={() => permissionButton()}>{t("Give permit")}</Button>
-            <TextField
-                required
-                id="outlined-required"
-                label={t("Rename the file")}
-                type = "text"
-                defaultValue=""
-                onChange={(e) => setRename(e.target.value)}
-                />
-            <Button sx={{ display: 'flex', justifyContent: 'center', marginLeft: 2 }} variant="contained" color="primary" onClick={() => renameButton()}>{t("Rename")}</Button>
-            <TextField
-                required
-                id="outlined-required"
-                label={t("Comment line")}
-                type = "number"
-                defaultValue=""
-                onChange={(e) => setLine(Number(e.target.value))}
-                />
-            <TextField
-                required
-                id="outlined-required"
-                label={t("Give comment")}
-                type = "text"
-                defaultValue=""
-                onChange={(e) => setInComment(e.target.value)}
-                />
-            
-            <Button sx={{ display: 'flex', justifyContent: 'center', marginLeft: 2 }} variant="contained" color="primary" onClick={() => commentBtn()}>{t("Comment")}</Button>
-            <Button onClick={() => changeLanguage("fi")}>FI</Button>
-            <Button onClick={() => changeLanguage("en")}>EN</Button>
-            </Box>
-        <Box
-            sx={{
-                minHeight: "100vh",
-                backgroundColor: "#e5e5e5",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "flex-start",
-                pt: 6,
-            }}
-        >
-            <Card
                 sx={{
-                    width: "210mm",
-                    minHeight: "297mm",
-                    maxWidth: "100%",
-                    boxShadow: 6,
-                    borderRadius: 1,
-                }}
-            >
-                <CardContent sx={{ p: 6 }}>
-                    <Typography variant="h4" sx={{ mb: 4, fontWeight: 500 }}>
-                        {t("Edit File")}
-                    </Typography>
+                    width: "100%",
+                    minHeight: "100vh",
+                    display: "flex",
+                    flexDirection: "column",
+                    backgroundColor: "#f8f9fa",
+                    overflowX: "hidden",
+                    }}
+                >
+                <Box sx={{ display: 'flex' }}>
+                    <CssBaseline />
+                    <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                        <Toolbar>
+                        <Typography variant="h6" noWrap component="div">
+                            OneDrive
+                        </Typography>
+                        </Toolbar>
+                    </AppBar>
+                    <Drawer
+                        variant="permanent"
+                        sx={{
+                        width: drawerWidth,
+                        flexShrink: 0,
+                        [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
+                        }}
+                    >
+                        <Toolbar />
+                        <Box sx={{ overflow: 'auto' }}>
+                        <List>
+                            <ListItem key={"Edit Permit"} disablePadding >
+                                <DownloadDoneOutlinedIcon />
+                                <Accordion defaultExpanded>
+                                    <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon />}
+                                    aria-controls="panel3-content"
+                                    id="panel3-header"
+                                    >
+                                    <Typography component="span">{t("Edit Permit")}</Typography>
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                    {t("Give permit to your friends to edit the file")}
+                                    </AccordionDetails>
+                                    <AccordionActions>
+                                        <TextField
+                                            required
+                                            id="outlined-required"
+                                            label={t("Permit User ID")}
+                                            type = "text"
+                                            defaultValue=""
+                                            onChange={(e) => setPermitId(e.target.value)}
+                                        />
+                                        <Button 
+                                        type="button"
+                                        sx={{
+                                            display: 'flex', justifyContent: 'center', marginLeft: 2 }}
+                                            variant="contained" color="primary" 
+                                            onClick={() => permissionButton()}
+                                            >
+                                                {t("Give permit")}
+                                        </Button>
+                                    </AccordionActions>
+                                </Accordion>
+                            </ListItem>
+                            <ListItem key={"Rename"} disablePadding >
+                                <DriveFileRenameOutlineOutlinedIcon/>
+                                <Accordion defaultExpanded>
+                                    <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon />}
+                                    aria-controls="panel3-content"
+                                    id="panel3-header"
+                                    >
+                                    <Typography component="span">{t("Rename")}</Typography>
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                    {t("Only the owner can rename the file")}
+                                    </AccordionDetails>
+                                    <AccordionActions>
+                                         <TextField
+                                            required
+                                            id="outlined-required"
+                                            label={t("Rename the file")}
+                                            type = "text"
+                                            defaultValue=""
+                                            onChange={(e) => setRename(e.target.value)}
+                                            />
+                                        <Button
+                                            type="button"
+                                            sx={{ display: 'flex', justifyContent: 'center', marginLeft: 2 }}
+                                            variant="contained" 
+                                            color="primary" 
+                                            onClick={() => renameButton()}
+                                            >
+                                                {t("Rename")}
+                                        </Button>
+                                    </AccordionActions>
+                                </Accordion>
+                            </ListItem>
+                            <ListItem key={"Comment"} disablePadding >
+                                <MarkUnreadChatAltOutlinedIcon/>
+                                <Accordion defaultExpanded>
+                                    <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon />}
+                                    aria-controls="panel3-content"
+                                    id="panel3-header"
+                                    >
+                                    <Typography component="span">{t("Comment")}</Typography>
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                    {t("Give comment to improve the file content")}
+                                    <Box paddingTop={2}>
+                                        <TextField
+                                            fullWidth
+                                            required
+                                            id="outlined-required"
+                                            label={t("Comment line")}
+                                            type = "number"
+                                            defaultValue=""
+                                            onChange={(e) => setLine(Number(e.target.value))}
+                                            />
+                                        <TextField
+                                            fullWidth
+                                            required
+                                            id="outlined-required"
+                                            label={t("Give comment")}
+                                            type = "text"
+                                            defaultValue=""
+                                            onChange={(e) => setInComment(e.target.value)}
+                                            />
+                                    </Box>
+                                    </AccordionDetails>
+                                    <AccordionActions>
+                                        <Button 
+                                            type="button"
+                                            sx={{
+                                            display: 'flex', justifyContent: 'center'}}
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={() => commentBtn()}
+                                            >
+                                                {t("Comment")}
+                                        </Button>
+                                    </AccordionActions>
+                                </Accordion>
+                            </ListItem>
+                        </List>
+                        <Divider />
+                        <List>
+                            <ListItem key={"Lock"}>
+                                <Button
+                                    color="warning"
+                                    variant="contained"
+                                    fullWidth
+                                    onClick={() => lockButton()}
+                                    > {t("lock")}
+                                </Button>
+                            </ListItem>
+                            <ListItem key={"Unlock"}>
+                                <Button
+                                    color = "success"
+                                    variant="contained"
+                                    fullWidth
+                                    onClick={() => unLockButton()}
+                                    > {t("Unlock")}
+                                </Button>
+                            </ListItem>
+                            <ListItem key={"viewToAll"}>
+                                <Button
+                                    variant="contained"
+                                    fullWidth
+                                    onClick={() => viewToAllBtn()}
+                                > {t("View to all")}
+                                </Button>
+                            </ListItem>
+                            <ListItem key={"downloadPDF"}>
+                                <Button
+                                    variant="outlined"
+                                    fullWidth
+                                    onClick={() => downLoadPdfBtn()}
+                                > {t("Download PDF")}
+                                </Button>
+                            </ListItem>
+                            <ListItem key={"homePage"}>
+                                <Button
+                                    variant="outlined"
+                                    fullWidth
+                                    onClick={() => homeBtn()}
+                                > {t("Go home")}
+                                </Button>
+                            </ListItem>
+                        </List>
+                        <p>{t("Change language")}</p>
+                        <Button variant="text" onClick={() => changeLanguage("fi")}>FI</Button>
+                        <Button variant="text" onClick={() => changeLanguage("en")}>EN</Button>
+                        </Box>
+                    </Drawer>
+                    <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+                            <Card
+                                sx={{
+                                    width: "210mm",
+                                    minHeight: "297mm",
+                                    backgroundColor: "#ffffff",
+                                    boxShadow: "0px 2px 8px rgba(0,0,0,0.08)",
+                                    borderRadius: 2,
+                                }}
+                            >
+                                <CardContent sx={{ p: 6 }}>
+                                    {loading ? (
+                                        <Typography>{t("Loading...")}</Typography>
+                                    ) : (
+                                        <TextField
+                                            multiline
+                                            minRows={25}
+                                            fullWidth
+                                            variant="standard"
+                                            sx={{
+                                                fontFamily: `"Roboto", "Arial", sans-serif`,
+                                                fontSize: "15px",
+                                                lineHeight: 1.7,
+                                            }}
+                                            value = {content}
+                                            onChange={(e) => setContent(e.target.value)}
+                                        />
+                                    )}
 
-                    {loading ? (
-                        <Typography>{t("Loading...")}</Typography>
-                    ) : (
-                        <TextField
-                            multiline
-                            minRows={25}
-                            fullWidth
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            variant="outlined"
-                            sx={{
-                                "& .MuiInputBase-root": {
-                                    fontFamily: `"Times New Roman", serif`,
-                                    fontSize: "16px",
-                                    lineHeight: 1.6,
-                                    padding: "16px",
-                                },
-                                backgroundColor: "#ffffff",
-                            }}
-                        />
-                    )}
+                                    <Box sx={{
+                                            mt: 4,
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                        }}>
+                                        <Box sx={{ display: "flex", gap: 1 }}>
+                                            <Button
+                                                variant="contained"
+                                                size="large"
+                                                disabled={saving}
+                                                onClick={saveButton}
+                                            >
+                                                {saving ? t("Saving...") : t("Save")}
+                                            </Button>
+                                        </Box>
+                                    </Box>
+                                    <Box sx={{ mt: 6 }}>
+                                        <Typography variant="h6" sx={{ mb: 2 }}>
+                                            {t("Comments")}
+                                        </Typography>
+                                        <Stack spacing = {2}>
+                                            {comment.length === 0 ? (
+                                            <Typography variant="body2" color="text.secondary">
+                                                {t("No comments yet")}
+                                            </Typography>
+                                        ) : (
+                                            comment.map((c, index) => (
+                                                
+                                                <Paper
+                                                    key={index}
+                                                    elevation={0}
+                                                    sx={{
+                                                        p: 2,
+                                                        borderRadius: 2,
+                                                        border: "1px solid #e0e0e0",
+                                                    }}
+                                                >
+                                                    <Typography variant="subtitle2">
+                                                        Line {c.line}
+                                                    </Typography>
 
-                    <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 4 }}>
-                        <Button
-                            variant="contained"
-                            size="large"
-                            disabled={saving}
-                            onClick={saveButton}
-                        >
-                            {saving ? t("Saving...") : t("Save")}
-                        </Button>
-                        <Button
-                            variant="contained"
-                            size="large"
-                            onClick={() => lockButton()}
-                        > {t("lock")}
-                        </Button>
-                        <Button
-                            variant="contained"
-                            size="large"
-                            onClick={() => unLockButton()}
-                        > {t("Unlock")}
-                        </Button>
-                        <Button
-                            variant="contained"
-                            size="large"
-                            onClick={() => viewToAllBtn()}
-                        > {t("View to all")}
-                        </Button>
-                        <Button
-                            variant="contained"
-                            size="large"
-                            onClick={() => downLoadPdfBtn()}
-                        > {t("Download PDF")}
-                        </Button>
+                                                    <Typography variant="body1">
+                                                        {c.comment}
+                                                    </Typography>
+
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {new Date(c.createdAt).toLocaleString()}
+                                                    </Typography>
+                                                </Paper>
+                                            ))
+                                        )}
+                                        </Stack>
+                                    </Box>
+                                </CardContent>
+                            </Card>
                     </Box>
-                    <Box sx={{ mt: 4 }}>
-                        <Typography variant="h6">{t("Comments")}</Typography>
-
-                        {comment.length === 0 ? (
-                            <Typography variant="body2" color="text.secondary">
-                                {t("No comments yet")}
-                            </Typography>
-                        ) : (
-                            comment.map((c, index) => (
-                                <Box
-                                    key={index}
-                                    sx={{
-                                        mt: 2,
-                                        p: 2,
-                                        border: "1px solid #ddd",
-                                        borderRadius: 1,
-                                        backgroundColor: "#fafafa",
-                                    }}
-                                >
-                                    <Typography variant="subtitle2">
-                                        Line {c.line}
-                                    </Typography>
-
-                                    <Typography variant="body1">
-                                        {c.comment}
-                                    </Typography>
-
-                                    <Typography variant="caption" color="text.secondary">
-                                        {new Date(c.createdAt).toLocaleString()}
-                                    </Typography>
-                                </Box>
-                            ))
-                        )}
-                    </Box>
-                </CardContent>
-            </Card>
+                </Box>   
+                <Toaster  
+                toastOptions={{
+                    className: 'Toast-dis',
+                    style: {
+                    border: '2px',
+                    padding: '20px',
+                    width: '180px',
+                    color: '#ffffff',
+                    backgroundColor: '#fc84e2'
+                    },
+                }} />
         </Box>
-        </div>
     );
 };
 
