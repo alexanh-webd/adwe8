@@ -4,6 +4,9 @@ import { Box, Card, CardActions, CardContent, TextField, Typography } from '@mui
 import {useTranslation} from 'react-i18next';
 import toast, { Toaster } from 'react-hot-toast';
 
+import AppTheme from "../theme/AppTheme";
+import ColorModeSelect from "../theme/ColorModeSelect";
+
 import Drawer from '@mui/material/Drawer';
 import CssBaseline from '@mui/material/CssBaseline';
 import AppBar from '@mui/material/AppBar';
@@ -20,6 +23,7 @@ import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import DriveFolderUploadOutlinedIcon from '@mui/icons-material/DriveFolderUploadOutlined';
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined';
 import ContentPasteSearchOutlinedIcon from '@mui/icons-material/ContentPasteSearchOutlined';
+import ListItemIcon from '@mui/material/ListItemIcon';
 
 const drawerWidth = 287;
 
@@ -53,24 +57,25 @@ const Home = () => {
     const {t, i18n} = useTranslation();
     const [jwt, setJwt] = useState<string | null>(null);
     const [topics, setTopics] = useState<ITopic[]>([]);
-    const [title, setTitle] = useState<string>("123");
-    const [content, setContent] = useState<string>("default");
+    const [title, setTitle] = useState<string>("");
+    const [content, setContent] = useState<string>("");
     const [fileNameIn, setFileNameIn] = useState<File | null>(null);
     const [fetchedFiles, setFetchedFiles] = useState<ITextFile[]>([]);
     const [userId, setUserId] = useState<string>("");
     const [nonAuthFile, setNonAuthFile] = useState<ITextFile[]>([]);
     const [visible, setVisible] = useState<number>(2);
+    //getJWT from local storage --> will be used to fetch files corresponding to users
     useEffect(() => {
         if(localStorage.getItem("userToken")) {
             setJwt(localStorage.getItem("userToken"));
         }
     }, []);
-
+    // If JWT is valid --> Fetching the file
     useEffect(() => {
         if (!jwt) return
         fetchFileCorrespondingToUser();
     }, [jwt])
-    
+    // Upload file to server
     const postFile = async () => {
         try {
             if (!fileNameIn) {
@@ -180,9 +185,17 @@ const Home = () => {
     const showMoreBtn = () => {
         setVisible(visible => visible + 2);
     }
+    // This is from ChatGPT
+    const displayFiles = title
+    ? fetchedFiles.filter(file =>
+        file.filename.toLowerCase().includes(title.toLowerCase())
+      )
+    : fetchedFiles;
 
     return (
-        <>
+        <AppTheme>
+        <CssBaseline enableColorScheme />
+        <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem', zIndex: 2000 }} />
         <Toaster  
             toastOptions={{
             className: 'Toast-dis',
@@ -209,15 +222,17 @@ const Home = () => {
                     sx={{
                     width: drawerWidth,
                     flexShrink: 0,
-                    [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
+                    [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box', bgcolor: 'background.paper', },
                     }}
                 >
                     <Toolbar />
                     <Box sx={{ overflow: 'auto' }}>
                     <List>
-                         <ListItem key={"searchFile"} disablePadding >
-                                <SearchOutlinedIcon />
-                                <Accordion defaultExpanded>
+                         <ListItem key={"searchFile"} disablePadding alignItems="flex-start">
+                                <ListItemIcon sx={{ minWidth: 40 }}>
+                                    <SearchOutlinedIcon />
+                                </ListItemIcon>
+                                <Accordion defaultExpanded sx={{ width: '100%' }}>
                                     <AccordionSummary
                                     expandIcon={<ExpandMoreIcon />}
                                     aria-controls="panel3-content"
@@ -239,13 +254,14 @@ const Home = () => {
                                     </Box>
                                     </AccordionDetails>
                                     <AccordionActions>
-                                        <Button endIcon={<ContentPasteSearchOutlinedIcon/>} sx={{ display: 'flex', justifyContent: 'center', marginLeft: 2 }} variant="outlined" color="secondary" >{t("Search File")}</Button>
                                     </AccordionActions>
                                 </Accordion>
                         </ListItem>
                         <ListItem key={"uploadFile"} disablePadding>
-                            <DriveFolderUploadOutlinedIcon/>
-                            <Accordion defaultExpanded>
+                            <ListItemIcon sx={{ minWidth: 40 }}>
+                                <DriveFolderUploadOutlinedIcon />
+                            </ListItemIcon>
+                            <Accordion defaultExpanded sx={{ width: '100%' }}>
                             <AccordionSummary
                                 expandIcon={<ExpandMoreIcon />}
                                 aria-controls="panel3-content"
@@ -265,9 +281,12 @@ const Home = () => {
                                             width: '100%',
                                             height: '56px', // same as MUI TextField default height
                                             padding: '16.5px 14px', // match MUI TextField padding
-                                            border: '1px solid rgba(0, 0, 0, 0.23)',
                                             borderRadius: 4,
-                                            boxSizing: 'border-box'
+                                            boxSizing: 'border-box',
+                                            background: 'transparent',
+                                            color: 'inherit',
+                                            border: '1px solid currentColor',
+
                                         }
                                     }
                                     onChange={(e) => setFileNameIn(e.target.files?.[0] ?? null)}
@@ -304,7 +323,7 @@ const Home = () => {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <div>
-        <h2>{t("Home")}</h2>
+        <Typography variant="h4">{t("Home")}</Typography>
         {!jwt ? (
             <>
                 <p>{t("Please login to use OneDrive.")}</p>
@@ -352,8 +371,9 @@ const Home = () => {
                     <Box>
                     <Button onClick={fetchFileCorrespondingToUser}>{t("Get files")}</Button>
                     </Box>
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mt: 2 }}>
-                        {fetchedFiles.slice(0, visible).map((file) => (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 3 }}>
+                        {displayFiles.slice(0, visible).map((file) => (
+
                             <Card key={file._id} sx={{ width: 300 }}>
                             <CardContent>
                                 <Typography variant="h6">{file.filename}</Typography>
@@ -382,14 +402,16 @@ const Home = () => {
                         
                         </Box>
                         <Box paddingTop={2}>
-                            <button onClick={() => showMoreBtn()}>{t("Show more")}</button>
-                        </Box>    
+                            <Button variant="outlined" onClick={showMoreBtn}>
+                                {t("Show more")}
+                            </Button>
+                        </Box>
                 </>
             )}
        </div> 
       </Box>
     </Box>
-    </>
+    </AppTheme>
 
     );
 }

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Box, Button, TextField } from '@mui/material'
 
+// THIS IS THE TEST LOGIN PAGE FROM WEEK8 EXERCISE
+
 const fetchData = async (email: string, password: string) => {
     try {
         const response = await fetch("http://localhost:4000/api/user/login", {

@@ -15,6 +15,7 @@ import PDFDocument from "pdfkit";
 import { validateToken } from '../middleware/validateToken.js';
 import { adminCheckedToken } from '../middleware/adminCheckedToken.js';
 const router = Router();
+// Register route for new user
 router.post("/api/user/register", registerValidation, async (req, res) => {
     // checking errors
     const errors = validationResult(req);
@@ -50,6 +51,7 @@ router.post("/api/user/register", registerValidation, async (req, res) => {
         res.status(500).json({ message: "Internal Server error" });
     }
 });
+// login route
 router.post("/api/user/login", body('email').escape(), body('password'), async (req, res) => {
     try {
         const user = await User.findOne({ email: req.body.email });
@@ -62,7 +64,8 @@ router.post("/api/user/login", body('email').escape(), body('password'), async (
                 username: user.username,
                 isAdmin: user.isAdmin
             };
-            const token = jwt.sign(jwtPayload, process.env.SECRET, { expiresIn: "120m" });
+            // Create the token and set the expire time --> In this case is 1 hour.
+            const token = jwt.sign(jwtPayload, process.env.SECRET, { expiresIn: "60m" });
             return res.status(200).json({ token: token });
         }
         else {
@@ -74,6 +77,7 @@ router.post("/api/user/login", body('email').escape(), body('password'), async (
         res.status(500).json({ message: "Internal Server error" });
     }
 });
+// THIS ROUTE IS FROM WEEK 8 EXERCISE --> TESTING ROUTE
 router.get("/api/topics", async (req, res) => {
     try {
         const topics = await Topic.find({});
@@ -121,11 +125,16 @@ router.delete("/api/topic/:id", adminCheckedToken, async (req, res) => {
         }
     }
 });
+// THIS IS THE END OF THE TESTING ROUTE
+//UPLOAD ROUTE
 router.post("/api/upload", validateToken, upload.single("image"), async (req, res) => {
     try {
+        // Check if the user is authorized
+        // If not return
         if (!req.user) {
             return res.status(401).json({ message: "Unauthorized" });
         }
+        // If the user is aithorized --> Create a new textfile object and upload to server
         if (!req.file) {
             return res.status(400).json({ message: "No file uploaded" });
         }
@@ -144,6 +153,7 @@ router.post("/api/upload", validateToken, upload.single("image"), async (req, re
         return res.status(500).json({ message: "Internal server error" });
     }
 });
+// Get files corresponding to user
 router.post("/api/files", validateToken, async (req, res) => {
     if (!req.user)
         return res.status(401).json({ message: "Unauthorized" });
@@ -158,6 +168,7 @@ router.post("/api/files", validateToken, async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 });
+// Give permission route
 router.put("/api/file/:id/permission", validateToken, async (req, res) => {
     if (!req.user)
         return res.status(401).json({ message: "Unauthorized" });
@@ -289,6 +300,7 @@ router.get("/api/content/:id", validateToken, async (req, res) => {
         return res.status(500).json({ message: "Internal server error" });
     }
 });
+// fetch files for nonAuthenticated user
 router.get("/api/nonAuth/content/:id", async (req, res) => {
     try {
         const fileId = await req.params.id;
@@ -382,6 +394,7 @@ router.get("/api/file/nonAuthenticate", async (req, res) => {
         return res.status(500).json({ message: "Internal server error" });
     }
 });
+// download PDF file
 router.get("/api/file/:id/downloadPDF", async (req, res) => {
     try {
         const file = await TextFile.findById(req.params.id);

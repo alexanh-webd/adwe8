@@ -6,7 +6,7 @@ interface ITopic extends Document {
     username: string;
     createdAt: Date;
 }
-
+// This is an example from week 8 exercise
 const topicSchema = new Schema<ITopic>({
     title: {type: String, required: true},
     content: {type: String, required: true},

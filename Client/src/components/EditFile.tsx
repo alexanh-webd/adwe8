@@ -4,6 +4,9 @@ import { Box, Button, Card, CardContent, TextField, Typography, Stack, Paper } f
 import {useTranslation} from 'react-i18next';
 import toast, { Toaster } from 'react-hot-toast';
 
+import AppTheme from "../theme/AppTheme";
+import ColorModeSelect from "../theme/ColorModeSelect";
+
 import Drawer from '@mui/material/Drawer';
 import AppBar from '@mui/material/AppBar';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -46,7 +49,6 @@ const EditFile = () => {
         const token = localStorage.getItem("userToken");
         if (token) setJwt(token);
     }, []);
-
     // Fetch file content when JWT or fileId changes
     const fetchComment = async() => {
             if (!jwt || !fileId) return;
@@ -122,7 +124,7 @@ const EditFile = () => {
             setSaving(false);
         }
     };
-
+    // LOCK BUTTON ALLOWS THE USER TO PREVENT OTHERS FROM EDITING THE FILE
     const lockButton = async() => {
         try {
             const lockResponse = await fetch(`http://localhost:4000/api/lock/${fileId}`, {
@@ -138,7 +140,7 @@ const EditFile = () => {
             console.error("Error locking file:", error.message);
         }
     }
-    
+    // UNLOCK BUTTON SHOULD BE USED WHEN USER WANTS TO SAVE THE FILE.
     const unLockButton = async() => {
         try {
             const lockResponse = await fetch(`http://localhost:4000/api/unlock/${fileId}`, {
@@ -154,7 +156,7 @@ const EditFile = () => {
             console.error("Error unlocking file:", error.message);
         }
     }
-
+    //Give permission to other user based on their id
     const permissionButton = async() => {
         try {
             const permissionResponse = await fetch(`http://localhost:4000/api/file/${fileId}/permission`, {
@@ -188,7 +190,7 @@ const EditFile = () => {
             console.error("Error rename the file " + error.message);
         }
     }
-
+    // Set the file public to all user
     const viewToAllBtn = async() => {
         try {
             const giveViewFetching = await fetch(`http://localhost:4000/api/read=true/${fileId}`, {
@@ -205,7 +207,7 @@ const EditFile = () => {
             toast("Error when giving view permission to all user!!!")
         }
     }
-
+    // download the fileas pdf with name of myfile.pdf
     const downLoadPdfBtn = async() => {
         try {
             const dowloadPdf = await fetch(`http://localhost:4000/api/file/${fileId}/downloadPDF`);
@@ -246,13 +248,17 @@ const EditFile = () => {
     }
 
     return (
+        <AppTheme>
+            <CssBaseline enableColorScheme/>
+            <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem', zIndex: 2000 }} />
             <Box
                 sx={{
                     width: "100%",
                     minHeight: "100vh",
                     display: "flex",
                     flexDirection: "column",
-                    backgroundColor: "#f8f9fa",
+                    bgcolor: "background.default",
+                    color: "text.primary",
                     overflowX: "hidden",
                     }}
                 >
@@ -447,7 +453,7 @@ const EditFile = () => {
                                 sx={{
                                     width: "210mm",
                                     minHeight: "297mm",
-                                    backgroundColor: "#ffffff",
+                                    bgcolor: "background.paper",
                                     boxShadow: "0px 2px 8px rgba(0,0,0,0.08)",
                                     borderRadius: 2,
                                 }}
@@ -506,7 +512,8 @@ const EditFile = () => {
                                                     sx={{
                                                         p: 2,
                                                         borderRadius: 2,
-                                                        border: "1px solid #e0e0e0",
+                                                        border: (theme) => `1px solid ${theme.palette.divider}`,
+                                                        bgcolor: "background.paper"
                                                     }}
                                                 >
                                                     <Typography variant="subtitle2">
@@ -541,6 +548,7 @@ const EditFile = () => {
                     },
                 }} />
         </Box>
+    </AppTheme>
     );
 };
 
