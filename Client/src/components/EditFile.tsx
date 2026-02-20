@@ -246,7 +246,7 @@ const EditFile = () => {
     const homeBtn = () => {
         window.location.href = `/home`;
     }
-
+    // The UI in this edit page is the same as Home.tsx. The difference is the space where the text will showed and can be modified.
     return (
         <AppTheme>
             <CssBaseline enableColorScheme/>

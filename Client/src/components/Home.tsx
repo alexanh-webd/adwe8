@@ -192,11 +192,13 @@ const Home = () => {
       )
     : fetchedFiles;
 
+    // The UI is from MUI library
+
     return (
         <AppTheme>
         <CssBaseline enableColorScheme />
         <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem', zIndex: 2000 }} />
-        <Toaster  
+        <Toaster  // This is for the warning message 
             toastOptions={{
             className: 'Toast-dis',
             style: {

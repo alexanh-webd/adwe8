@@ -3,7 +3,7 @@ import Button from '@mui/material/Button';
 import { Box, Card, CardActions, CardContent, TextField, Typography } from '@mui/material';
 import {useTranslation} from 'react-i18next';
 import toast, { Toaster } from 'react-hot-toast';
-
+// This is the first page of the application. The non authenticated user can see the public file. They can click on the Get files button to see the content in the NonAuthContent page.
 interface INonAuthFile {
     file: ITextFile[];
 }
@@ -65,7 +65,7 @@ const NonAuthPage = () => {
                 </Button>
                 <Button onClick={fetchFileNonAuthen}>{t("Get files")}</Button>
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mt: 2 }}>
-                        {nonAuthFile.map((file) => (
+                        {nonAuthFile.map((file) => (                    //Fetching all public files and display in each card.
                             <Card key={file._id} sx={{ width: 300 }}>
                                 <CardContent>
                                     <Typography variant="h6">{file.filename}</Typography>

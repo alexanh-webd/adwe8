@@ -15,7 +15,7 @@ import ForgotPassword from './ForgotPassword';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from './CustomIcons';
 import toast, { Toaster } from 'react-hot-toast';
 import {useTranslation} from 'react-i18next';
-
+// The sign in card is a sample from public lirary that I found on the internet.
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',

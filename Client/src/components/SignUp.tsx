@@ -16,7 +16,7 @@ import { styled } from '@mui/material/styles';
 import AppTheme from '../theme/AppTheme';
 import ColorModeSelect from '../theme/ColorModeSelect';
 import { GoogleIcon, FacebookIcon } from '../components/CustomIcons';
-
+// This code is from a public library on the internet. I just added the function for the sign up button.
 const Card = styled(MuiCard)(({ theme }) => ({
     display: 'flex',
     flexDirection: 'column',

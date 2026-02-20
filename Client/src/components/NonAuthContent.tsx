@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Box, Button, Card, CardContent, TextField, Typography } from "@mui/material";
-
+// This is the page to show the file content for non authenticated user. The file content will be fetched automatically once the page is lauched.
+// 
 const NonAuthContent = () => {
     const { fileId } = useParams<{ fileId: string }>(); // only call once
     const [content, setContent] = useState("");
