@@ -1,52 +1,60 @@
-# Reddit-Like Forum Application
+# Personal Drive Application
 
 ## Overview
 
-This project is a simplified Reddit-like forum application that allows users to create and view discussion topics. The application supports user authentication and implements Role-Based Access Control (RBAC) to manage permissions for different user roles.
+The aim of this project is to implement a system that lets users register, login, and create text documents into a “cloud drive”. The user can have as many documents as possible as she wishes in her drive, and she can also edit and remove her documents. In essence, this is a similar system to, for example, Google Drive or OneDrive. Non-authenticated users cannot see anything – links to documents can be shared so that a non-authenticated user can see the file, not edit it.
 
-All users can browse and view posts, but only registered users can create new topics. Administrative users have additional privileges, including the ability to delete posts.
+## Basic Features
+
+o The application is implementing the use of Materialize, which allows users to use mobile devices and desktop browsers.
+
+o Non-authenticated users can register and login to use the service. They can also view the file that is public to all users.
+
+o Authenticated users can:
+
+§ Add/remove/rename/edit documents to/from/on their own drive
+
+§ The only required document type is text document (No formatting tools is required, and no simultaneous editing is required)
+
+§ Give editing permission to some existing users
+
+§ Give view permission to any user via the service
+
+§ Two users cannot edit the same document at the same time. The file can be locked to avoid other users entering the file while editing. An informative message is given if the document is edited by another user.
+
+§ If the user is editing and getting back to the home page, they can come back to edit via the service. However, if they are not saving the file after editing it, the edited content will not be saved.
+
+§ Log out
 
 ## Features
 
-- Public access to view all posts and topics
-- User registration and authentication
-- Authenticated users can create new topics/posts
-- Role-Based Access Control (RBAC)
-- Admin-only permission to delete posts
+§ Basic features as listed above
 
-## User Roles
+§ Utilization of a frontside framework, such as React, but you can also use Angular, Vue or some other
 
-### Guest (Unregistered User)
-- View all posts and topics
+§ Document can be downloaded as PDF
+§ The drive shows besides the name of the document also the creation and last updated timestamp
 
-### Registered User
-- View all posts and topics
-- Create new topics and posts
+§ Users can comment parts of the document
 
-### Admin User
-- View all posts and topics
-- Create new topics and posts
-- Delete any post
+§ The application has dark and bright modes
 
-## Functional Requirements
+§ User has an option to clone existing documents. This feature allows all users to view public documents via a link.
 
-- Users must be authenticated to create posts
-- Only users with the `ADMIN` role can delete posts
-- Unauthorized actions are blocked and handled securely
-- Posts are visible to all users regardless of authentication status
+§ Translation of the whole UI in two or more languages using i18n
 
-## Application Flow
+§ Add pagination to the document listing
 
-1. A user visits the forum and can view all existing posts
-2. The user registers or logs in to create new posts
-3. Admin users can manage content by deleting posts when necessary
-4. Role checks are enforced before performing restricted actions
+§ Add search functionality of some sort
 
-## Future Enhancements (Optional)
+§ Additional features:
 
-- Commenting system
-- Upvote/downvote functionality
-- User profile pages
-- Post editing
+o Using hot-toast via npm install react-hot-toast.
+
+o This feature should be accepted because:
+
+§ Hot toast allows the application to show the user beautiful notifications whether there are any errors occurring during the use of the service.
+
+## Detailed documentation can be found in https://lut-my.sharepoint.com/:w:/g/personal/duc_l_nguyen_student_lut_fi/IQDonZt349pMQIBK87cza5-WAfPDjaBlZxNWCsyL7dSaNhk?rtime=2gvtS2Jm3kg
 - Search and filtering of topics
 
